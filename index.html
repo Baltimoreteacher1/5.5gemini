@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Volume Explorer: Shipping Constraints</title>
+    <title>Volume Mastery: Fractional Prisms</title>
     <style>
         :root {
-            --bg-base: #f8f9fa;
+            --bg-base: #f4f6f8;
             --bg-surface: #ffffff;
             --text-main: #202124;
             --text-muted: #5f6368;
             --primary: #1a73e8;
+            --primary-hover: #1557b0;
             --success: #1e8e3e;
             --error: #d93025;
             --border: #dadce0;
@@ -29,19 +30,16 @@
                 --success: #81c995;
                 --error: #f28b82;
                 --border: #3c4043;
-                --hud-bg: #3c4043;
+                --hud-bg: #2d3035;
             }
         }
 
         :root[data-theme="light"] {
-            --bg-base: #f8f9fa;
+            --bg-base: #f4f6f8;
             --bg-surface: #ffffff;
             --text-main: #202124;
             --text-muted: #5f6368;
             --primary: #1a73e8;
-            --success: #1e8e3e;
-            --error: #d93025;
-            --border: #dadce0;
             --hud-bg: #e8f0fe;
         }
 
@@ -53,20 +51,21 @@
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            padding: 2rem 1rem;
+            padding: 1rem;
             min-height: 100vh;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .app-container {
             background: var(--bg-surface);
             width: 100%;
-            max-width: 1000px;
+            max-width: 1100px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         /* Top HUD */
@@ -77,7 +76,26 @@
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border);
             background: var(--bg-surface);
+            z-index: 10;
         }
+
+        .controls { display: flex; gap: 0.75rem; }
+
+        button {
+            appearance: none;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        button:hover { background: var(--hud-bg); color: var(--primary); border-color: var(--primary); }
+        button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .hud-metrics {
             display: flex;
@@ -86,101 +104,67 @@
             font-weight: 600;
             color: var(--text-muted);
         }
+        .metric-value { color: var(--primary); font-size: 1rem;}
 
-        .metric-value { color: var(--primary); }
-
-        .controls {
+        /* Navigation Tabs */
+        .nav-tabs {
             display: flex;
-            gap: 1rem;
+            background: var(--bg-base);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
         }
-
-        button {
-            appearance: none;
-            border: 1px solid var(--border);
+        .nav-tab {
+            padding: 1rem 1.5rem;
+            border: none;
             background: transparent;
-            color: var(--text-main);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+            color: var(--text-muted);
             font-weight: 600;
             cursor: pointer;
-            transition: background var(--transition), color var(--transition);
+            transition: color var(--transition);
+        }
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
         }
 
-        button:hover { background: var(--hud-bg); color: var(--primary); border-color: var(--primary); }
-        button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-        /* Main Workspace */
-        .workspace {
+        /* Workspace Views */
+        .view-container {
+            display: none;
+            animation: fadeIn 300ms ease;
+        }
+        .view-container.active {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
             padding: 2rem;
         }
+        @media (max-width: 850px) { .view-container.active { grid-template-columns: 1fr; } }
 
-        @media (max-width: 768px) {
-            .workspace { grid-template-columns: 1fr; }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .panel {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
-        p { font-size: 1rem; color: var(--text-muted); }
-
-        /* Problem Text */
+        .panel { display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        h2 { font-size: 1.25rem; font-weight: 600; }
         .problem-statement {
             background: var(--bg-base);
             padding: 1.5rem;
             border-radius: 8px;
             border-left: 4px solid var(--primary);
         }
+        .problem-statement ul { margin-left: 1.5rem; margin-top: 0.5rem; }
 
-        /* Visualizer */
-        .svg-container {
-            width: 100%;
-            height: 300px;
-            background: var(--bg-base);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        svg {
-            width: 100%;
-            height: 100%;
-            overflow: visible;
-        }
-
-        .svg-text {
-            font-family: var(--font-sans);
-            font-size: 14px;
-            font-weight: 600;
-            fill: var(--text-main);
-            user-select: none;
-        }
-
-        .svg-highlight { fill: var(--primary); font-size: 16px; }
-
-        /* Interactive Steps */
+        /* Step Logic */
         .step-container {
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 1.5rem;
-            transition: opacity var(--transition);
             background: var(--bg-surface);
+            transition: opacity var(--transition), transform var(--transition);
         }
-
-        .step-container.locked {
-            opacity: 0.4;
-            pointer-events: none;
-            background: var(--bg-base);
-        }
+        .step-container.locked { opacity: 0.4; pointer-events: none; background: var(--bg-base); }
+        .step-container.completed { border-color: var(--success); }
 
         .input-group {
             display: flex;
@@ -190,7 +174,7 @@
             flex-wrap: wrap;
         }
 
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             width: 100px;
             padding: 0.5rem;
             border: 2px solid var(--border);
@@ -199,30 +183,15 @@
             text-align: center;
             background: var(--bg-surface);
             color: var(--text-main);
-            transition: border-color var(--transition), box-shadow var(--transition);
+            transition: all var(--transition);
         }
+        input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: var(--primary); }
+        input.success { border-color: var(--success); box-shadow: 0 0 0 3px rgba(30, 142, 62, 0.2); }
+        input.error { border-color: var(--error); }
 
-        input[type="number"]:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
+        .fraction-display { font-weight: 600; color: var(--primary); min-width: 40px; }
 
-        input[type="number"].success {
-            border-color: var(--success);
-            box-shadow: 0 0 0 3px rgba(30, 142, 62, 0.2);
-        }
-
-        input[type="number"].error {
-            border-color: var(--error);
-        }
-
-        .fraction-display {
-            font-weight: 600;
-            color: var(--primary);
-            min-width: 40px;
-        }
-
-        /* EN Mode Specifics */
+        /* EN Mode Scaffold */
         .en-scaffold {
             display: none;
             background: var(--hud-bg);
@@ -231,406 +200,445 @@
             margin-top: 1rem;
             border: 1px dashed var(--primary);
         }
+        [data-mode="EN"] .en-scaffold { display: block; }
+        .sentence-frame { font-style: italic; color: var(--text-muted); margin-top: 0.5rem; }
 
-        [data-mode="EN"] .en-scaffold {
-            display: block;
-        }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { border: 1px solid var(--border); padding: 0.75rem; text-align: center; }
+        th { background: var(--bg-base); font-weight: 600; }
 
-        .sentence-frame {
-            font-style: italic;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
+        /* SVG Visualizer */
+        .svg-container {
+            width: 100%;
+            height: 350px;
+            background: var(--bg-base);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        svg { width: 100%; height: 100%; overflow: visible; }
+        .svg-text { font-family: var(--font-sans); font-size: 14px; font-weight: 600; fill: var(--text-main); user-select: none; }
+        .svg-label-bg { fill: var(--bg-surface); opacity: 0.8; }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="light" data-mode="EN">
 
 <div class="app-container">
     <header class="header-hud">
         <div class="controls">
-            <button id="btn-theme" onclick="UI.toggleTheme()">Dark Mode</button>
-            <button id="btn-reset" onclick="Controller.reset()">Reset</button>
+            <button id="btn-theme" onclick="App.toggleTheme()">Dark Mode</button>
+            <button onclick="App.resetCurrentView()">Reset View</button>
         </div>
         <div class="controls">
-            <button id="btn-en" class="active" onclick="Controller.setMode('EN')">EN Mode</button>
-            <button id="btn-r" onclick="Controller.setMode('R')">R Mode</button>
+            <button id="btn-en" class="active" onclick="App.setMode('EN')">EN Mode</button>
+            <button id="btn-r" onclick="App.setMode('R')">R Mode</button>
         </div>
         <div class="hud-metrics">
+            <span>Level: <span id="hud-level" class="metric-value">1</span></span>
             <span>Accuracy: <span id="hud-accuracy" class="metric-value">100%</span></span>
             <span>Streak: <span id="hud-streak" class="metric-value">0</span></span>
         </div>
     </header>
 
-    <main class="workspace">
-        <div class="panel left-panel">
-            <div class="problem-statement">
-                <h2>The Shipping Box</h2>
-                <p>Akela has a box that can hold <strong>830 ⅞ in³</strong>.</p>
-                <p>Due to shipping regulations, the box can be no longer than <strong>12 inches</strong>.</p>
-                <p>The width and height of the box are both <strong>8 ½ in</strong>.</p>
-                <p>Can he use this box?</p>
-            </div>
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="App.switchView('view-cubes', 1)">1. Unit Cubes</button>
+        <button class="nav-tab" onclick="App.switchView('view-akela', 2)">2. Akela's Box</button>
+        <button class="nav-tab" onclick="App.switchView('view-popcorn', 3)">3. Popcorn Math</button>
+    </div>
 
-            <div id="step-1" class="step-container">
-                <h2>Step 1: Identify the Knowns</h2>
-                <div class="input-group">
-                    <label>Volume (V) =</label>
-                    <input type="number" id="input-v" step="0.125" placeholder="830.875">
-                    <span class="fraction-display" id="frac-v"></span>
+    <main>
+        <div id="view-cubes" class="view-container active">
+            <div class="panel left-panel">
+                <div class="problem-statement">
+                    <h2>Building a Prism</h2>
+                    <p>A rectangular prism is built using <strong>½-inch unit cubes</strong>.</p>
+                    <ul>
+                        <li>Length: 5 unit cubes</li>
+                        <li>Width: 2 unit cubes</li>
+                        <li>Height: 3 unit cubes</li>
+                    </ul>
                 </div>
-                <div class="input-group">
-                    <label>Width (W) =</label>
-                    <input type="number" id="input-w" step="0.5" placeholder="8.5">
-                    <span class="fraction-display" id="frac-w"></span>
-                </div>
-                <div class="input-group">
-                    <label>Height (H) =</label>
-                    <input type="number" id="input-h" step="0.5" placeholder="8.5">
-                    <span class="fraction-display" id="frac-h"></span>
-                </div>
-            </div>
 
-            <div id="step-2" class="step-container locked">
-                <h2>Step 2: Calculate Base Area</h2>
-                <p>Formula: Base Area (B) = W × H</p>
-                <div class="en-scaffold">
-                    <p>First, find the area of the bottom face.</p>
-                    <p class="sentence-frame">"The base area is <span id="sf-w">__</span> × <span id="sf-h">__</span>."</p>
+                <div id="vc-step-1" class="step-container">
+                    <h2>Step 1: Find Dimensions in Inches</h2>
+                    <div class="en-scaffold">
+                        <p>Multiply the number of cubes by ½ inch to find the actual lengths.</p>
+                        <p class="sentence-frame">"5 cubes × ½ = 2 ½ inches."</p>
+                    </div>
+                    <div class="input-group">
+                        <label>Length (L) =</label>
+                        <input type="number" id="vc-in-l" step="0.5" data-target="2.5" oninput="App.validate(this, 'vc-step-1', 'vc-in-w')">
+                        <span class="fraction-display" id="fd-vc-l"></span>
+                    </div>
+                    <div class="input-group">
+                        <label>Width (W) =</label>
+                        <input type="number" id="vc-in-w" step="0.5" data-target="1" oninput="App.validate(this, 'vc-step-1', 'vc-in-h')">
+                        <span class="fraction-display" id="fd-vc-w"></span>
+                    </div>
+                    <div class="input-group">
+                        <label>Height (H) =</label>
+                        <input type="number" id="vc-in-h" step="0.5" data-target="1.5" oninput="App.validate(this, 'vc-step-1', null)">
+                        <span class="fraction-display" id="fd-vc-h"></span>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>B = </label>
-                    <input type="number" id="input-b" step="0.25" placeholder="72.25">
-                    <span class="fraction-display" id="frac-b"></span>
-                </div>
-            </div>
-            
-            <div id="step-3" class="step-container locked">
-                <h2>Step 3: Solve for Missing Length</h2>
-                <p>Formula: V = B × L &nbsp; → &nbsp; L = V ÷ B</p>
-                <div class="en-scaffold">
-                    <p class="sentence-frame">"To find the length, I must divide the volume by the base area."</p>
-                </div>
-                <div class="input-group">
-                    <label>Length (L) = </label>
-                    <input type="number" id="input-l" step="0.5" placeholder="11.5">
-                    <span class="fraction-display" id="frac-l"></span>
-                </div>
-            </div>
 
-            <div id="step-4" class="step-container locked">
-                <h2>Step 4: Regulation Check</h2>
-                <p>Is the length ≤ 12 inches?</p>
-                <div class="input-group">
-                    <button id="btn-yes" onclick="Controller.checkConclusion(true)">Yes</button>
-                    <button id="btn-no" onclick="Controller.checkConclusion(false)">No</button>
+                <div id="vc-step-2" class="step-container locked">
+                    <h2>Step 2: Calculate Volume</h2>
+                    <p>V = L × W × H</p>
+                    <div class="input-group">
+                        <label>Total Volume =</label>
+                        <input type="number" id="vc-in-v" step="0.25" data-target="3.75" oninput="App.validate(this, 'vc-step-2', null)">
+                        <span class="fraction-display" id="fd-vc-v"></span>
+                        <span>in³</span>
+                    </div>
                 </div>
-                <p id="final-msg" style="margin-top: 1rem; font-weight: 600; color: var(--success); display: none;">Correct! Akela can use the box.</p>
+            </div>
+            <div class="panel right-panel">
+                <h2>Visualizer</h2>
+                <div class="svg-container" id="svg-wrap-cubes"></div>
             </div>
         </div>
 
-        <div class="panel right-panel">
-            <h2>Visualizer</h2>
-            <div class="svg-container">
-                <svg id="prism-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="view-akela" class="view-container">
+            <div class="panel left-panel">
+                <div class="problem-statement">
+                    <h2>Akela's Shipping Box</h2>
+                    <p>Akela has a box with a volume of <strong>830 ⅞ in³</strong>.</p>
+                    <p>Width = <strong>8 ½ in</strong>, Height = <strong>8 ½ in</strong>.</p>
+                    <p>Shipping rules: The box must be <strong>no longer than 12 inches</strong>.</p>
+                </div>
+
+                <div id="va-step-1" class="step-container">
+                    <h2>Step 1: Calculate Base Area</h2>
+                    <div class="en-scaffold"><p class="sentence-frame">"First, multiply Width × Height to find the Base Area (B)."</p></div>
+                    <div class="input-group">
+                        <label>Base (B) =</label>
+                        <input type="number" id="va-in-b" step="0.25" data-target="72.25" oninput="App.validate(this, 'va-step-1', 'va-in-l')">
+                        <span class="fraction-display" id="fd-va-b"></span>
+                    </div>
+                </div>
+
+                <div id="va-step-2" class="step-container locked">
+                    <h2>Step 2: Solve for Length</h2>
+                    <p>V = B × L &nbsp;→&nbsp; L = V ÷ B</p>
+                    <div class="input-group">
+                        <label>Length (L) =</label>
+                        <input type="number" id="va-in-l" step="0.5" data-target="11.5" oninput="App.validate(this, 'va-step-2', null)">
+                        <span class="fraction-display" id="fd-va-l"></span>
+                    </div>
+                </div>
+
+                <div id="va-step-3" class="step-container locked">
+                    <h2>Step 3: Check Constraint</h2>
+                    <p>Is the length 12 inches or less?</p>
+                    <div class="input-group">
+                        <button id="btn-akela-yes" onclick="App.checkBoolean('btn-akela-yes', true, true)">Yes</button>
+                        <button id="btn-akela-no" onclick="App.checkBoolean('btn-akela-no', false, true)">No</button>
+                    </div>
+                    <div class="en-scaffold" id="en-akela-final" style="display:none; margin-top:1rem; border-color:var(--success);">
+                        <p class="sentence-frame">"Akela can use the box because 11 ½ is less than 12."</p>
+                    </div>
+                </div>
+            </div>
+            <div class="panel right-panel">
+                <h2>Visualizer</h2>
+                <div class="svg-container" id="svg-wrap-akela"></div>
             </div>
         </div>
+
+        <div id="view-popcorn" class="view-container">
+            <div class="panel left-panel">
+                <div class="problem-statement">
+                    <h2>Buying Popcorn</h2>
+                    <p>The theater sells three sizes. Calculate the volume for each to determine the best value.</p>
+                    <table>
+                        <tr><th>Size</th><th>L (in)</th><th>W (in)</th><th>H (in)</th><th>Price</th></tr>
+                        <tr><td>Small</td><td>5 ½</td><td>4</td><td>8 ¼</td><td>$4.50</td></tr>
+                        <tr><td>Medium</td><td>6 ¾</td><td>5</td><td>10 ½</td><td>$5.75</td></tr>
+                        <tr><td>Large</td><td>10 ¼</td><td>6</td><td>11 ½</td><td>$7.00</td></tr>
+                    </table>
+                </div>
+
+                <div id="vp-step-1" class="step-container">
+                    <h2>Step 1: Calculate Volumes (in³)</h2>
+                    <div class="en-scaffold"><p class="sentence-frame">"I will use V = L × W × H for each row."</p></div>
+                    <div class="input-group">
+                        <label>Small V =</label>
+                        <input type="number" id="vp-in-s" step="0.5" data-target="181.5" oninput="App.validate(this, 'vp-step-1', 'vp-in-m')">
+                    </div>
+                    <div class="input-group">
+                        <label>Medium V =</label>
+                        <input type="number" id="vp-in-m" step="0.125" data-target="354.375" oninput="App.validate(this, 'vp-step-1', 'vp-in-l')">
+                    </div>
+                    <div class="input-group">
+                        <label>Large V =</label>
+                        <input type="number" id="vp-in-l" step="0.25" data-target="707.25" oninput="App.validate(this, 'vp-step-1', null)">
+                    </div>
+                </div>
+
+                <div id="vp-step-2" class="step-container locked">
+                    <h2>Step 2: Analysis</h2>
+                    <p>Which box gives you the most popcorn for your money?</p>
+                    <div class="en-scaffold">
+                        <p class="sentence-frame">"The large box is slightly more money, but holds almost double the medium."</p>
+                    </div>
+                    <div class="input-group">
+                        <button id="btn-pop-s" onclick="App.checkBoolean('btn-pop-s', false, false)">Small</button>
+                        <button id="btn-pop-m" onclick="App.checkBoolean('btn-pop-m', false, false)">Medium</button>
+                        <button id="btn-pop-l" onclick="App.checkBoolean('btn-pop-l', true, true)">Large</button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel right-panel">
+                <h2>Visualizer</h2>
+                <div class="svg-container" id="svg-wrap-popcorn"></div>
+            </div>
+        </div>
+
     </main>
 </div>
 
 <script>
     /**
-     * CONFIGURATION
-     * Immutable constants for the module scenario.
+     * CORE APPLICATION LOGIC
+     * Single deterministic pass. No external dependencies.
      */
-    const CONFIG = {
-        V: 830.875,
-        W: 8.5,
-        H: 8.5,
-        B: 72.25,
-        L: 11.5,
-        MAX_LIMIT: 12
-    };
-
-    /**
-     * REPOSITORY / STATE
-     * Deterministic state tracking.
-     */
-    const State = {
-        mode: 'EN',
-        currentStep: 1,
-        inputs: { v: null, w: null, h: null, b: null, l: null },
-        metrics: { attempts: 0, hits: 0, streak: 0 }
-    };
-
-    /**
-     * SERVICE LAYER
-     * Utility and calculation functions.
-     */
-    const Service = {
-        decimalToFractionString(decimal) {
-            if (!decimal) return '';
-            const whole = Math.floor(decimal);
-            const frac = decimal - whole;
-            let fracStr = '';
-            
-            const tolerance = 0.001;
-            if (Math.abs(frac - 0.5) < tolerance) fracStr = '½';
-            else if (Math.abs(frac - 0.25) < tolerance) fracStr = '¼';
-            else if (Math.abs(frac - 0.75) < tolerance) fracStr = '¾';
-            else if (Math.abs(frac - 0.125) < tolerance) fracStr = '⅛';
-            else if (Math.abs(frac - 0.375) < tolerance) fracStr = '⅜';
-            else if (Math.abs(frac - 0.625) < tolerance) fracStr = '⅝';
-            else if (Math.abs(frac - 0.875) < tolerance) fracStr = '⅞';
-            else if (frac > tolerance) return decimal.toString(); // Fallback
-
-            if (whole === 0 && fracStr !== '') return fracStr;
-            if (whole !== 0 && fracStr === '') return whole.toString();
-            return `${whole} ${fracStr}`;
+    const App = {
+        state: {
+            mode: 'EN',
+            currentView: 'view-cubes',
+            stats: { attempts: 0, hits: 0, streak: 0 },
+            views: {
+                'view-cubes': { l: null, w: null, h: null, v: null },
+                'view-akela': { b: null, l: null },
+                'view-popcorn': { s: null, m: null, l: null }
+            }
         },
-        validateInput(value, target) {
-            return Math.abs(parseFloat(value) - target) < 0.001;
-        }
-    };
 
-    /**
-     * UI / VIEW LAYER
-     * DOM Manipulation and SVG Rendering.
-     */
-    const UI = {
         init() {
-            this.bindInputs();
-            this.renderPrism();
-            document.body.setAttribute('data-theme', 'light');
+            this.switchView('view-cubes', 1);
         },
 
         toggleTheme() {
             const body = document.body;
-            const current = body.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            body.setAttribute('data-theme', next);
-            document.getElementById('btn-theme').textContent = next === 'dark' ? 'Light Mode' : 'Dark Mode';
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('btn-theme').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+            this.renderAllSVGs();
         },
 
-        bindInputs() {
-            const mappings = [
-                { id: 'input-v', key: 'v', target: CONFIG.V, step: 1, next: 'input-w' },
-                { id: 'input-w', key: 'w', target: CONFIG.W, step: 1, next: 'input-h' },
-                { id: 'input-h', key: 'h', target: CONFIG.H, step: 1, next: null },
-                { id: 'input-b', key: 'b', target: CONFIG.B, step: 2, next: null },
-                { id: 'input-l', key: 'l', target: CONFIG.L, step: 3, next: null }
-            ];
-
-            mappings.forEach(map => {
-                const el = document.getElementById(map.id);
-                el.addEventListener('input', (e) => {
-                    const val = e.target.value;
-                    document.getElementById(`frac-${map.key}`).textContent = Service.decimalToFractionString(parseFloat(val));
-                    
-                    if (val !== '') {
-                        State.metrics.attempts++;
-                        if (Service.validateInput(val, map.target)) {
-                            el.classList.add('success');
-                            el.classList.remove('error');
-                            el.disabled = true;
-                            State.inputs[map.key] = parseFloat(val);
-                            State.metrics.hits++;
-                            State.metrics.streak++;
-                            this.updateHUD();
-                            
-                            if (map.next) document.getElementById(map.next).focus();
-                            Controller.checkStepCompletion(map.step);
-                        } else {
-                            el.classList.add('error');
-                            el.classList.remove('success');
-                            State.metrics.streak = 0;
-                            this.updateHUD();
-                        }
-                    }
-                });
-            });
-        },
-
-        updateHUD() {
-            const acc = State.metrics.attempts === 0 ? 100 : Math.round((State.metrics.hits / State.metrics.attempts) * 100);
-            document.getElementById('hud-accuracy').textContent = `${acc}%`;
-            document.getElementById('hud-streak').textContent = State.metrics.streak;
-        },
-
-        unlockStep(stepNum) {
-            document.getElementById(`step-${stepNum}`).classList.remove('locked');
-        },
-
-        setModeDisplay(mode) {
+        setMode(mode) {
+            this.state.mode = mode;
             document.body.setAttribute('data-mode', mode);
             document.getElementById('btn-en').classList.toggle('active', mode === 'EN');
             document.getElementById('btn-r').classList.toggle('active', mode === 'R');
+        },
+
+        switchView(viewId, level) {
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             
-            // Populate sentence frames if EN
-            if (mode === 'EN') {
-                document.getElementById('sf-w').textContent = Service.decimalToFractionString(CONFIG.W);
-                document.getElementById('sf-h').textContent = Service.decimalToFractionString(CONFIG.H);
+            document.getElementById(viewId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            this.state.currentView = viewId;
+            document.getElementById('hud-level').textContent = level;
+            this.renderAllSVGs();
+        },
+
+        decimalToFraction(dec) {
+            if (!dec || isNaN(dec)) return '';
+            const w = Math.floor(dec);
+            const f = dec - w;
+            let str = '';
+            if (Math.abs(f - 0.5) < 0.01) str = '½';
+            else if (Math.abs(f - 0.25) < 0.01) str = '¼';
+            else if (Math.abs(f - 0.75) < 0.01) str = '¾';
+            else if (Math.abs(f - 0.125) < 0.01) str = '⅛';
+            else if (Math.abs(f - 0.375) < 0.01) str = '⅜';
+            else if (Math.abs(f - 0.625) < 0.01) str = '⅝';
+            else if (Math.abs(f - 0.875) < 0.01) str = '⅞';
+            else if (f > 0.01) return String(dec);
+
+            if (w === 0 && str) return str;
+            if (w !== 0 && !str) return String(w);
+            return `${w} ${str}`;
+        },
+
+        updateHUD(isHit) {
+            this.state.stats.attempts++;
+            if (isHit) {
+                this.state.stats.hits++;
+                this.state.stats.streak++;
+            } else {
+                this.state.stats.streak = 0;
+            }
+            const acc = Math.round((this.state.stats.hits / this.state.stats.attempts) * 100);
+            document.getElementById('hud-accuracy').textContent = `${acc}%`;
+            document.getElementById('hud-streak').textContent = this.state.stats.streak;
+        },
+
+        validate(inputEl, stepId, nextInputId) {
+            const val = parseFloat(inputEl.value);
+            const target = parseFloat(inputEl.getAttribute('data-target'));
+            const idKey = inputEl.id;
+            
+            // Update display fraction if sibling exists
+            const fracEl = document.getElementById('fd-' + idKey);
+            if (fracEl) fracEl.textContent = this.decimalToFraction(val);
+
+            if (!isNaN(val)) {
+                if (Math.abs(val - target) < 0.001) {
+                    inputEl.classList.add('success');
+                    inputEl.classList.remove('error');
+                    inputEl.disabled = true;
+                    this.updateHUD(true);
+
+                    // Track state for SVG rendering
+                    if (idKey === 'vc-in-l') this.state.views['view-cubes'].l = val;
+                    if (idKey === 'vc-in-w') this.state.views['view-cubes'].w = val;
+                    if (idKey === 'vc-in-h') this.state.views['view-cubes'].h = val;
+                    if (idKey === 'va-in-l') this.state.views['view-akela'].l = val;
+                    if (idKey === 'vp-in-l') this.state.views['view-popcorn'].l = val; // tracking large box for scale
+                    
+                    this.renderAllSVGs();
+
+                    if (nextInputId) document.getElementById(nextInputId).focus();
+                    this.checkStepCompletion(stepId);
+                } else {
+                    inputEl.classList.add('error');
+                    inputEl.classList.remove('success');
+                    this.updateHUD(false);
+                }
             }
         },
 
-        renderPrism() {
-            const svg = document.getElementById('prism-svg');
-            svg.innerHTML = ''; // Clear
+        checkStepCompletion(currentStepId) {
+            const container = document.getElementById(currentStepId);
+            const inputs = container.querySelectorAll('input');
+            const allComplete = Array.from(inputs).every(i => i.disabled);
+            
+            if (allComplete) {
+                container.classList.add('completed');
+                // Find next step and unlock
+                const nextStep = container.nextElementSibling;
+                if (nextStep && nextStep.classList.contains('step-container')) {
+                    nextStep.classList.remove('locked');
+                }
+            }
+        },
 
-            // Isometric projection parameters
-            const cx = 200, cy = 200; // Origin (bottom center front)
-            const scale = 12;
-            const angle = Math.PI / 6; // 30 degrees
+        checkBoolean(btnId, isCorrect, isTarget) {
+            const btn = document.getElementById(btnId);
+            if (isCorrect === isTarget) {
+                btn.classList.add('active');
+                this.updateHUD(true);
+                btn.parentElement.parentElement.classList.add('completed');
+                const scaffold = btn.parentElement.parentElement.querySelector('.en-scaffold');
+                if (scaffold) scaffold.style.display = 'block';
+            } else {
+                this.updateHUD(false);
+                btn.style.borderColor = 'var(--error)';
+                setTimeout(() => btn.style.borderColor = '', 500);
+            }
+        },
 
-            // Dimensions (use knowns if input, else default visually to ? or target)
-            const w = State.inputs.w || CONFIG.W;
-            const h = State.inputs.h || CONFIG.H;
-            const l = State.inputs.l || CONFIG.L;
+        resetCurrentView() {
+            const view = document.getElementById(this.state.currentView);
+            view.querySelectorAll('input').forEach(i => {
+                i.value = '';
+                i.disabled = false;
+                i.classList.remove('success', 'error');
+            });
+            view.querySelectorAll('.fraction-display').forEach(f => f.textContent = '');
+            view.querySelectorAll('.step-container').forEach((s, idx) => {
+                s.classList.remove('completed');
+                if (idx > 0) s.classList.add('locked');
+            });
+            view.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            
+            this.state.views[this.state.currentView] = {}; // clear state
+            this.renderAllSVGs();
+        },
 
-            // Calculate vectors
+        /**
+         * DETERMINISTIC SVG RENDERING
+         */
+        renderAllSVGs() {
+            if (this.state.currentView === 'view-cubes') this.drawPrism('svg-wrap-cubes', this.state.views['view-cubes'].l || 2.5, this.state.views['view-cubes'].w || 1, this.state.views['view-cubes'].h || 1.5, 30);
+            if (this.state.currentView === 'view-akela') this.drawPrism('svg-wrap-akela', this.state.views['view-akela'].l || 11.5, 8.5, 8.5, 8);
+            if (this.state.currentView === 'view-popcorn') {
+                const volL = this.state.views['view-popcorn'].l;
+                if (volL) this.drawPrism('svg-wrap-popcorn', 10.25, 6, 11.5, 8, "var(--success)"); // Show large box
+                else this.drawPrism('svg-wrap-popcorn', 5.5, 4, 8.25, 12, "var(--text-muted)"); // Show small box init
+            }
+        },
+
+        drawPrism(containerId, l, w, h, scale, overrideColor) {
+            const wrap = document.getElementById(containerId);
+            if (!wrap) return;
+            
+            // Use CSS variables for colors based on theme
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const colorFill = overrideColor || (isDark ? '#8ab4f8' : '#aecbfa');
+            const colorStroke = isDark ? '#e8eaed' : '#202124';
+            
+            const cx = 200, cy = 250; 
+            const angle = Math.PI / 6;
+
             const dx_w = -Math.cos(angle) * w * scale;
             const dy_w = -Math.sin(angle) * w * scale;
-            
             const dx_l = Math.cos(angle) * l * scale;
             const dy_l = -Math.sin(angle) * l * scale;
-            
             const dy_h = -h * scale;
 
-            // Points
-            const p0 = {x: cx, y: cy}; // Front bottom
-            const pW = {x: cx + dx_w, y: cy + dy_w}; // Left bottom
-            const pL = {x: cx + dx_l, y: cy + dy_l}; // Right bottom
-            const pB = {x: cx + dx_w + dx_l, y: cy + dy_w + dy_l}; // Back bottom
-
+            const p0 = {x: cx, y: cy}; 
+            const pW = {x: cx + dx_w, y: cy + dy_w}; 
+            const pL = {x: cx + dx_l, y: cy + dy_l}; 
+            const pB = {x: cx + dx_w + dx_l, y: cy + dy_w + dy_l}; 
             const p0_h = {x: p0.x, y: p0.y + dy_h};
             const pW_h = {x: pW.x, y: pW.y + dy_h};
             const pL_h = {x: pL.x, y: pL.y + dy_h};
             const pB_h = {x: pB.x, y: pB.y + dy_h};
 
-            // Helper to draw polygon
-            const drawPoly = (points, fill, strokeDash = "") => {
-                const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-                poly.setAttribute("points", points.map(p => `${p.x},${p.y}`).join(" "));
-                poly.setAttribute("fill", fill);
-                poly.setAttribute("stroke", "var(--text-main)");
-                poly.setAttribute("stroke-width", "2");
-                poly.setAttribute("stroke-linejoin", "round");
-                if (strokeDash) poly.setAttribute("stroke-dasharray", strokeDash);
-                svg.appendChild(poly);
-            };
-
-            // Draw Base (Hidden lines)
-            drawPoly([pW, pB, pL], "none", "5,5");
-
-            // Draw Faces
-            const baseColor = State.currentStep >= 2 && State.mode === 'EN' ? "var(--hud-bg)" : "transparent"; // Highlight base area in EN step 2
+            const pointsToSVG = pts => pts.map(p => `${p.x},${p.y}`).join(" ");
             
-            drawPoly([pW, p0, pL, pB], baseColor); // Bottom
-            drawPoly([p0, pL, pL_h, p0_h], "var(--primary)", ""); // Right Face
-            drawPoly([pW, p0, p0_h, pW_h], "#669df6", ""); // Left Face
-            drawPoly([pW_h, p0_h, pL_h, pB_h], "#aecbfa", ""); // Top Face
+            let svgStr = `<svg viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg">`;
+            
+            // Hidden lines
+            svgStr += `<polygon points="${pointsToSVG([pW, pB, pL])}" fill="none" stroke="${colorStroke}" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>`;
+            svgStr += `<line x1="${pB.x}" y1="${pB.y}" x2="${pB_h.x}" y2="${pB_h.y}" stroke="${colorStroke}" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>`;
+            
+            // Visible Faces
+            const applyFill = (pts, darken) => `<polygon points="${pointsToSVG(pts)}" fill="${colorFill}" stroke="${colorStroke}" stroke-width="2" stroke-linejoin="round" opacity="${darken}"/>`;
+            svgStr += applyFill([pW, p0, p0_h, pW_h], 0.8); // Left
+            svgStr += applyFill([p0, pL, pL_h, p0_h], 0.9); // Right
+            svgStr += applyFill([pW_h, p0_h, pL_h, pB_h], 1.0); // Top
 
-            // Helper to draw labels
-            const drawLabel = (x, y, text, isHighlight = false) => {
-                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                txt.setAttribute("x", x);
-                txt.setAttribute("y", y);
-                txt.setAttribute("class", `svg-text ${isHighlight ? 'svg-highlight' : ''}`);
-                txt.setAttribute("text-anchor", "middle");
-                txt.textContent = text;
-                svg.appendChild(txt);
-            };
+            // Labels with backgrounds for readability
+            const lStr = this.decimalToFraction(l) + ' in';
+            const wStr = this.decimalToFraction(w) + ' in';
+            const hStr = this.decimalToFraction(h) + ' in';
 
-            // Labels
-            const wLabel = State.inputs.w ? Service.decimalToFractionString(State.inputs.w) : "?";
-            const hLabel = State.inputs.h ? Service.decimalToFractionString(State.inputs.h) : "?";
-            const lLabel = State.inputs.l ? Service.decimalToFractionString(State.inputs.l) : "?";
+            const addText = (x, y, txt) => `
+                <rect x="${x-20}" y="${y-12}" width="40" height="16" fill="var(--bg-surface)" opacity="0.7" rx="4"/>
+                <text x="${x}" y="${y}" class="svg-text" text-anchor="middle">${txt}</text>
+            `;
 
-            drawLabel(cx + dx_w/2 - 15, cy + dy_w/2 + 15, `${wLabel} in`);
-            drawLabel(cx - 20, cy + dy_h/2, `${hLabel} in`);
-            drawLabel(cx + dx_l/2 + 15, cy + dy_l/2 + 20, State.currentStep >= 3 ? `${lLabel} in` : "L = ?");
-        },
+            svgStr += addText(cx + dx_l/2 + 20, cy + dy_l/2 + 20, lStr);
+            svgStr += addText(cx + dx_w/2 - 20, cy + dy_w/2 + 20, wStr);
+            svgStr += addText(cx - 25, cy + dy_h/2, hStr);
 
-        resetUI() {
-            document.querySelectorAll('input').forEach(el => {
-                el.value = '';
-                el.disabled = false;
-                el.classList.remove('success', 'error');
-            });
-            document.querySelectorAll('.fraction-display').forEach(el => el.textContent = '');
-            document.getElementById('step-2').classList.add('locked');
-            document.getElementById('step-3').classList.add('locked');
-            document.getElementById('step-4').classList.add('locked');
-            document.getElementById('final-msg').style.display = 'none';
-            document.getElementById('btn-yes').classList.remove('active');
-            document.getElementById('btn-no').classList.remove('active');
-            this.updateHUD();
-            this.renderPrism();
+            svgStr += `</svg>`;
+            wrap.innerHTML = svgStr;
         }
     };
 
-    /**
-     * CONTROLLER LAYER
-     * Bridge between UI and State.
-     */
-    const Controller = {
-        init() {
-            UI.init();
-            this.setMode(State.mode);
-        },
-
-        setMode(mode) {
-            State.mode = mode;
-            UI.setModeDisplay(mode);
-            UI.renderPrism();
-        },
-
-        checkStepCompletion(stepId) {
-            if (stepId === 1 && State.inputs.v && State.inputs.w && State.inputs.h) {
-                State.currentStep = 2;
-                UI.unlockStep(2);
-                UI.renderPrism();
-            }
-            if (stepId === 2 && State.inputs.b) {
-                State.currentStep = 3;
-                UI.unlockStep(3);
-                UI.renderPrism();
-            }
-            if (stepId === 3 && State.inputs.l) {
-                State.currentStep = 4;
-                UI.unlockStep(4);
-                UI.renderPrism();
-            }
-        },
-
-        checkConclusion(isYes) {
-            const btnYes = document.getElementById('btn-yes');
-            const btnNo = document.getElementById('btn-no');
-            
-            State.metrics.attempts++;
-            if (isYes) {
-                btnYes.classList.add('active');
-                btnNo.classList.remove('active');
-                document.getElementById('final-msg').style.display = 'block';
-                State.metrics.hits++;
-                State.metrics.streak++;
-            } else {
-                btnNo.classList.add('active');
-                btnYes.classList.remove('active');
-                State.metrics.streak = 0;
-            }
-            UI.updateHUD();
-        },
-
-        reset() {
-            State.currentStep = 1;
-            State.inputs = { v: null, w: null, h: null, b: null, l: null };
-            State.metrics = { attempts: 0, hits: 0, streak: 0 };
-            UI.resetUI();
-        }
-    };
-
-    // Initialize Application
-    document.addEventListener('DOMContentLoaded', () => Controller.init());
+    // Auto-init on load
+    document.addEventListener('DOMContentLoaded', () => App.init());
 </script>
 </body>
 </html>
